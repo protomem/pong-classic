@@ -1,24 +1,44 @@
 const std = @import("std");
+const sdl = @cImport(@cInclude("SDL2/SDL.h"));
+
+const SCREEN_WIDTH = 1200;
+const SCREEN_HEIGHT = 700;
 
 pub fn main() !void {
-    // Prints to stderr (it's a shortcut based on `std.io.getStdErr()`)
-    std.debug.print("All your {s} are belong to us.\n", .{"codebase"});
+    _ = sdl.SDL_Init(sdl.SDL_INIT_VIDEO);
+    defer sdl.SDL_Quit();
 
-    // stdout is for the actual output of your application, for example if you
-    // are implementing gzip, then only the compressed bytes should be sent to
-    // stdout, not any debugging messages.
-    const stdout_file = std.io.getStdOut().writer();
-    var bw = std.io.bufferedWriter(stdout_file);
-    const stdout = bw.writer();
+    const window = sdl.SDL_CreateWindow(
+        "Ping Pong Classic",
+        sdl.SDL_WINDOWPOS_UNDEFINED,
+        sdl.SDL_WINDOWPOS_UNDEFINED,
+        SCREEN_WIDTH,
+        SCREEN_HEIGHT,
+        sdl.SDL_WINDOW_SHOWN,
+    );
+    defer sdl.SDL_DestroyWindow(window);
 
-    try stdout.print("Run `zig build test` to run the tests.\n", .{});
+    const renderer = sdl.SDL_CreateRenderer(
+        window,
+        -1,
+        sdl.SDL_RENDERER_PRESENTVSYNC,
+    );
+    defer sdl.SDL_DestroyRenderer(renderer);
 
-    try bw.flush(); // don't forget to flush!
-}
+    var running = true;
+    while (running) {
+        var event = sdl.SDL_Event{ .type = 0 };
+        while (sdl.SDL_PollEvent(&event) != 0) {
+            switch (event.type) {
+                sdl.SDL_QUIT => running = false,
+                else => {},
+            }
+        }
 
-test "simple test" {
-    var list = std.ArrayList(i32).init(std.testing.allocator);
-    defer list.deinit(); // try commenting this out and see if zig detects the memory leak!
-    try list.append(42);
-    try std.testing.expectEqual(@as(i32, 42), list.pop());
+        _ = sdl.SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0x00); // Black color
+        _ = sdl.SDL_RenderClear(renderer);
+
+        defer sdl.SDL_RenderPresent(renderer);
+        defer sdl.SDL_Delay(16);
+    }
 }
