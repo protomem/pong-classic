@@ -16,15 +16,20 @@ pub fn Puddle() type {
         x: i32,
         y: i32,
 
+        top: i32,
+        bottom: i32,
+
         width: i32,
         height: i32,
 
         speed: i32,
 
-        pub fn init(x: i32, y: i32, width: i32, height: i32) Self {
+        pub fn init(x: i32, y: i32, top: i32, bottom: i32, width: i32, height: i32) Self {
             return Self{
                 .x = x - @divExact(width, 2),
                 .y = y - @divExact(height, 2),
+                .top = top,
+                .bottom = bottom,
                 .width = width,
                 .height = height,
                 .speed = 10,
@@ -47,19 +52,52 @@ pub fn Puddle() type {
             self.y += switch (direction) {
                 .Up => upspd: {
                     var speed = self.speed;
-                    if (self.y <= 0) {
+                    if (self.y <= self.top) {
                         speed = 0;
                     }
                     break :upspd -speed;
                 },
                 .Down => downspd: {
                     var speed = self.speed;
-                    if (self.y + self.height >= SCREEN_HEIGHT) {
+                    if (self.y + self.height >= self.bottom) {
                         speed = 0;
                     }
                     break :downspd speed;
                 },
             };
+        }
+    };
+}
+
+pub fn Border() type {
+    return struct {
+        const Self = @This();
+
+        x: i32,
+        y: i32,
+
+        width: i32,
+        height: i32,
+
+        pub fn init(x: i32, y: i32, width: i32, height: i32) Self {
+            return Self{
+                .x = x - @divExact(width, 2),
+                .y = y - @divExact(height, 2),
+                .width = width,
+                .height = height,
+            };
+        }
+
+        pub fn draw(self: Self, renderer: ?*sdl.SDL_Renderer) void {
+            const rect = sdl.SDL_Rect{
+                .x = self.x,
+                .y = self.y,
+                .w = self.width,
+                .h = self.height,
+            };
+
+            _ = sdl.SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
+            _ = sdl.SDL_RenderFillRect(renderer, &rect);
         }
     };
 }
@@ -85,8 +123,11 @@ pub fn main() !void {
     );
     defer sdl.SDL_DestroyRenderer(renderer);
 
-    var leftPuddle = Puddle().init(30, @divExact(SCREEN_HEIGHT, 2), 20, 150);
-    var rightPuddle = Puddle().init(SCREEN_WIDTH - 30, @divExact(SCREEN_HEIGHT, 2), 20, 150);
+    var borderTop = Border().init(@divExact(SCREEN_WIDTH, 2), @divExact(30, 2) + 2, SCREEN_WIDTH, 30);
+    var borderBottom = Border().init(@divExact(SCREEN_WIDTH, 2), SCREEN_HEIGHT - @divExact(30, 2) - 2, SCREEN_WIDTH, 30);
+
+    var leftPuddle = Puddle().init(30, @divExact(SCREEN_HEIGHT, 2), borderTop.y + borderTop.height, borderBottom.y, 20, 150);
+    var rightPuddle = Puddle().init(SCREEN_WIDTH - 30, @divExact(SCREEN_HEIGHT, 2), borderTop.y + borderTop.height, borderBottom.y, 20, 150);
 
     var running = true;
     while (running) {
@@ -115,10 +156,13 @@ pub fn main() !void {
         _ = sdl.SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0x00); // Black color
         _ = sdl.SDL_RenderClear(renderer);
 
-        leftPuddle.draw(renderer);
-        rightPuddle.draw(renderer);
-
         defer sdl.SDL_RenderPresent(renderer);
         defer sdl.SDL_Delay(16);
+
+        borderTop.draw(renderer);
+        borderBottom.draw(renderer);
+
+        leftPuddle.draw(renderer);
+        rightPuddle.draw(renderer);
     }
 }
