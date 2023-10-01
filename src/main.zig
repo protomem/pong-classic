@@ -127,24 +127,21 @@ pub fn Marking() type {
         }
 
         pub fn draw(self: Self, renderer: ?*sdl.SDL_Renderer) void {
-            _ = sdl.SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
-
             const height = @divTrunc(self.height - @as(i32, @intCast(self.gap * (self.num_rects - 1))), @as(i32, @intCast(self.num_rects)));
 
+            _ = sdl.SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
             for (0..self.num_rects) |i| {
+                const y = self.y + ((height + @as(i32, @intCast(self.gap))) * @as(i32, @intCast(i)));
+
                 const rect = sdl.SDL_Rect{
                     .x = self.x,
-                    .y = self.y + (self.y * @as(i32, @intCast(i))) + @as(i32, @intCast((self.gap * i))), // FIXME: Perecalculations
+                    .y = y,
                     .w = self.width,
                     .h = height,
                 };
 
                 _ = sdl.SDL_RenderFillRect(renderer, &rect);
-
-                std.debug.print("x: {d} y: {d} w: {d} h: {d}\n", .{ rect.x, rect.y, rect.w, rect.h });
             }
-
-            std.debug.print("-----\n\n", .{});
         }
     };
 }
@@ -173,7 +170,7 @@ pub fn main() !void {
     var borderTop = Border().init(@divTrunc(SCREEN_WIDTH, 2), @divTrunc(30, 2), SCREEN_WIDTH, 30);
     var borderBottom = Border().init(@divTrunc(SCREEN_WIDTH, 2), SCREEN_HEIGHT - @divTrunc(30, 2), SCREEN_WIDTH, 30);
 
-    var marking = Marking().init(@divTrunc(SCREEN_WIDTH, 2), @divTrunc(SCREEN_HEIGHT, 2), 20, SCREEN_HEIGHT - (30 * 2), 4, 8);
+    var marking = Marking().init(@divTrunc(SCREEN_WIDTH, 2), @divTrunc(SCREEN_HEIGHT, 2), 20, SCREEN_HEIGHT - (30 * 2), 10, 20);
 
     var leftPuddle = Puddle().init(30, @divTrunc(SCREEN_HEIGHT, 2), borderTop.y + borderTop.height, borderBottom.y, 20, 150);
     var rightPuddle = Puddle().init(SCREEN_WIDTH - 30, @divTrunc(SCREEN_HEIGHT, 2), borderTop.y + borderTop.height, borderBottom.y, 20, 150);
