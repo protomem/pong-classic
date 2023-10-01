@@ -26,8 +26,8 @@ pub fn Puddle() type {
 
         pub fn init(x: i32, y: i32, top: i32, bottom: i32, width: i32, height: i32) Self {
             return Self{
-                .x = x - @divExact(width, 2),
-                .y = y - @divExact(height, 2),
+                .x = x - @divTrunc(width, 2),
+                .y = y - @divTrunc(height, 2),
                 .top = top,
                 .bottom = bottom,
                 .width = width,
@@ -81,8 +81,8 @@ pub fn Border() type {
 
         pub fn init(x: i32, y: i32, width: i32, height: i32) Self {
             return Self{
-                .x = x - @divExact(width, 2),
-                .y = y - @divExact(height, 2),
+                .x = x - @divTrunc(width, 2),
+                .y = y - @divTrunc(height, 2),
                 .width = width,
                 .height = height,
             };
@@ -98,6 +98,53 @@ pub fn Border() type {
 
             _ = sdl.SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
             _ = sdl.SDL_RenderFillRect(renderer, &rect);
+        }
+    };
+}
+
+pub fn Marking() type {
+    return struct {
+        const Self = @This();
+
+        x: i32,
+        y: i32,
+
+        width: i32,
+        height: i32,
+
+        num_rects: usize,
+        gap: usize,
+
+        pub fn init(x: i32, y: i32, width: i32, height: i32, num_rects: usize, gap: usize) Self {
+            return Self{
+                .x = x - @divTrunc(width, 2),
+                .y = y - @divTrunc(height, 2),
+                .width = width,
+                .height = height,
+                .num_rects = num_rects,
+                .gap = gap,
+            };
+        }
+
+        pub fn draw(self: Self, renderer: ?*sdl.SDL_Renderer) void {
+            _ = sdl.SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
+
+            const height = @divTrunc(self.height - @as(i32, @intCast(self.gap * (self.num_rects - 1))), @as(i32, @intCast(self.num_rects)));
+
+            for (0..self.num_rects) |i| {
+                const rect = sdl.SDL_Rect{
+                    .x = self.x,
+                    .y = self.y + (self.y * @as(i32, @intCast(i))) + @as(i32, @intCast((self.gap * i))), // FIXME: Perecalculations
+                    .w = self.width,
+                    .h = height,
+                };
+
+                _ = sdl.SDL_RenderFillRect(renderer, &rect);
+
+                std.debug.print("x: {d} y: {d} w: {d} h: {d}\n", .{ rect.x, rect.y, rect.w, rect.h });
+            }
+
+            std.debug.print("-----\n\n", .{});
         }
     };
 }
@@ -123,11 +170,13 @@ pub fn main() !void {
     );
     defer sdl.SDL_DestroyRenderer(renderer);
 
-    var borderTop = Border().init(@divExact(SCREEN_WIDTH, 2), @divExact(30, 2) + 2, SCREEN_WIDTH, 30);
-    var borderBottom = Border().init(@divExact(SCREEN_WIDTH, 2), SCREEN_HEIGHT - @divExact(30, 2) - 2, SCREEN_WIDTH, 30);
+    var borderTop = Border().init(@divTrunc(SCREEN_WIDTH, 2), @divTrunc(30, 2), SCREEN_WIDTH, 30);
+    var borderBottom = Border().init(@divTrunc(SCREEN_WIDTH, 2), SCREEN_HEIGHT - @divTrunc(30, 2), SCREEN_WIDTH, 30);
 
-    var leftPuddle = Puddle().init(30, @divExact(SCREEN_HEIGHT, 2), borderTop.y + borderTop.height, borderBottom.y, 20, 150);
-    var rightPuddle = Puddle().init(SCREEN_WIDTH - 30, @divExact(SCREEN_HEIGHT, 2), borderTop.y + borderTop.height, borderBottom.y, 20, 150);
+    var marking = Marking().init(@divTrunc(SCREEN_WIDTH, 2), @divTrunc(SCREEN_HEIGHT, 2), 20, SCREEN_HEIGHT - (30 * 2), 4, 8);
+
+    var leftPuddle = Puddle().init(30, @divTrunc(SCREEN_HEIGHT, 2), borderTop.y + borderTop.height, borderBottom.y, 20, 150);
+    var rightPuddle = Puddle().init(SCREEN_WIDTH - 30, @divTrunc(SCREEN_HEIGHT, 2), borderTop.y + borderTop.height, borderBottom.y, 20, 150);
 
     var running = true;
     while (running) {
@@ -161,6 +210,8 @@ pub fn main() !void {
 
         borderTop.draw(renderer);
         borderBottom.draw(renderer);
+
+        marking.draw(renderer);
 
         leftPuddle.draw(renderer);
         rightPuddle.draw(renderer);
