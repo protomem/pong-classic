@@ -1,5 +1,6 @@
 const std = @import("std");
 const sdl = @cImport(@cInclude("SDL2/SDL.h"));
+const rand = std.crypto.random;
 
 const SCREEN_WIDTH = 1200;
 const SCREEN_HEIGHT = 700;
@@ -166,8 +167,8 @@ pub fn Ball() type {
                 .y = y - radius,
                 .radius = radius,
                 .speed = speed,
-                .delta_x = -1,
-                .delta_y = -1,
+                .delta_x = Ball().deltaResolver(),
+                .delta_y = Ball().deltaResolver(),
             };
         }
 
@@ -203,7 +204,7 @@ pub fn Ball() type {
                     self.y - self.radius <= puddle.y + puddle.height)
                 {
                     self.delta_x *= -1;
-                    self.delta_y *= 1;
+                    self.delta_y *= Ball().deltaResolver();
                 }
             }
 
@@ -222,6 +223,15 @@ pub fn Ball() type {
         pub fn move(self: *Self) void {
             self.x += self.delta_x * self.speed;
             self.y += self.delta_y * self.speed;
+        }
+
+        fn deltaResolver() i32 {
+            const res = rand.intRangeAtMost(i32, 1, 10);
+            if (res > 8) {
+                return -1;
+            } else {
+                return 1;
+            }
         }
     };
 }
