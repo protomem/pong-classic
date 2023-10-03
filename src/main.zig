@@ -3,7 +3,7 @@ const sdl = @cImport(@cInclude("SDL2/SDL.h"));
 const rand = std.crypto.random;
 
 const SCREEN_WIDTH = 1200;
-const SCREEN_HEIGHT = 700;
+const SCREEN_HEIGHT = 780;
 
 const Direction = enum {
     Up,
@@ -180,7 +180,7 @@ pub fn Ball() type {
                 .h = self.radius * 2,
             };
 
-            _ = sdl.SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
+            _ = sdl.SDL_SetRenderDrawColor(renderer, 0xED, 0x70, 0x14, 0xFF); // Orange color
             _ = sdl.SDL_RenderFillRect(renderer, &rect);
         }
 
@@ -257,13 +257,13 @@ pub fn main() !void {
     );
     defer sdl.SDL_DestroyRenderer(renderer);
 
-    var borderTop = Border().init(@divTrunc(SCREEN_WIDTH, 2), @divTrunc(30, 2), SCREEN_WIDTH, 30);
-    var borderBottom = Border().init(@divTrunc(SCREEN_WIDTH, 2), SCREEN_HEIGHT - @divTrunc(30, 2), SCREEN_WIDTH, 30);
+    var borderTop = Border().init(@divTrunc(SCREEN_WIDTH, 2), @divTrunc(20, 2), SCREEN_WIDTH, 20);
+    var borderBottom = Border().init(@divTrunc(SCREEN_WIDTH, 2), SCREEN_HEIGHT - @divTrunc(20, 2), SCREEN_WIDTH, 20);
 
-    var marking = Marking().init(@divTrunc(SCREEN_WIDTH, 2), @divTrunc(SCREEN_HEIGHT, 2), 20, SCREEN_HEIGHT - (30 * 2), 15, 20);
+    var marking = Marking().init(@divTrunc(SCREEN_WIDTH, 2), @divTrunc(SCREEN_HEIGHT, 2), 20, SCREEN_HEIGHT - (20 * 2), 15, 20);
 
-    var leftPuddle = Puddle().init(30, @divTrunc(SCREEN_HEIGHT, 2), borderTop.y + borderTop.height, borderBottom.y, 20, 150);
-    var rightPuddle = Puddle().init(SCREEN_WIDTH - 30, @divTrunc(SCREEN_HEIGHT, 2), borderTop.y + borderTop.height, borderBottom.y, 20, 150);
+    var leftPuddle = Puddle().init(30, @divTrunc(SCREEN_HEIGHT, 2), borderTop.y + borderTop.height, borderBottom.y, 15, 150);
+    var rightPuddle = Puddle().init(SCREEN_WIDTH - 30, @divTrunc(SCREEN_HEIGHT, 2), borderTop.y + borderTop.height, borderBottom.y, 15, 150);
 
     var ball = Ball().init(@divTrunc(SCREEN_WIDTH, 2), @divTrunc(SCREEN_HEIGHT, 2), 13, 5);
 
